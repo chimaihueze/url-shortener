@@ -16,6 +16,16 @@ class ResponseDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class StatResponseDTO(BaseModel):
+    id: str = Field(max_length=36)
+    url: AnyUrl
+    short_code: str = Field(min_length=4, max_length=10)
+    created_at: datetime
+    updated_at: datetime
+    access_count: int
+
+    model_config = ConfigDict(from_attributes=True)
+
 T = TypeVar("T")
 
 class SuccessResponse(BaseModel, Generic[T]):
