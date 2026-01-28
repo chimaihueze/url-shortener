@@ -1,14 +1,14 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, AnyUrl
+from datetime import datetime
 
 
 class Request(BaseModel):
-    url: str
+    url: AnyUrl
 
 
 class Response(BaseModel):
-    id: str
-    url: str
-    short_code: str
-    created_at: str
-    updated_at: str
+    id: str = Field(max_length=36)
+    url: AnyUrl
+    short_code: str = Field(min_length=4, max_length=10)
+    created_at: datetime
+    updated_at: datetime
