@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-# from app.core.config import DATABASE_URL
+from app.config import DB_NAME
 from app.core.db.declarative_base import Base
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 
 DB_DIR = BASE_DIR / "database"
-DB_PATH = DB_DIR / "db"
+DB_PATH = DB_DIR / str(DB_NAME)
 
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
