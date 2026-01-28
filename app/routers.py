@@ -2,7 +2,7 @@ from datetime import datetime
 import random
 import string
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.core.db.session import get_session
 from app.model import URL
@@ -70,3 +70,18 @@ async def update_original_url(short_code: str, data: RequestDTO, db: AsyncSessio
         message="URL updated successfully",
         data=ResponseDTO.model_validate(url_data)
     )
+
+@router.delete("/{short_code}", response_model=SuccessResponse, status_code=200)
+async def delete_url(short_code: str, db: AsyncSession = Depends(get_session)):
+    stmt = select(URL).where(URL.short_code == short_code)
+    result = await db.execute(stmt)
+    url_data = result.scalar_one_or_none()
+
+    if not url_data:
+        raise HTTPException(status_code=404, detail="Short URL not found")
+
+    delete_stmt = delete(URL).where(URL.short_code == short_code)
+    await db.execute(delete_stmt)
+    await db.commit()
+
+    return SuccessResponse(message="URL deleted successfully", data=None)
