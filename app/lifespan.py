@@ -14,7 +14,6 @@ async def lifespan(app):
 
     try:
         await init_db()
-        logging.debug("Database initialized successfully")
 
         logging.info("Application startup complete")
 
