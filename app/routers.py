@@ -47,3 +47,26 @@ async def get_original_url(short_code: str, db: AsyncSession = Depends(get_sessi
             data=ResponseDTO.model_validate(url_data)
         )
 
+@router.put("/{short_code}", response_model=SuccessResponse[ResponseDTO], status_code=200)
+async def update_original_url(short_code: str, data: RequestDTO, db: AsyncSession = Depends(get_session)):
+    stmt = select(URL).where(URL.short_code == short_code)
+
+    result = await db.execute(stmt)
+
+    url_data = result.scalar_one_or_none()
+
+    if not url_data:
+        raise HTTPException(
+            status_code=404,
+            detail="Short URL not found",
+        )
+
+    url_data.url = str(data.url)
+    db.add(url_data)
+    await db.commit()
+    await db.refresh(url_data)
+
+    return SuccessResponse(
+        message="URL updated successfully",
+        data=ResponseDTO.model_validate(url_data)
+    )
