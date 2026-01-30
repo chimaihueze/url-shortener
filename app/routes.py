@@ -41,6 +41,17 @@ async def get_original_url(short_code: str, db: AsyncSession = Depends(get_sessi
             status_code=404,
             detail="Short URL not found",
         )
+    stmt = (
+        update(URL)
+        .where(URL.short_code == short_code)
+        .values(access_count=URL.access_count + 1)
+        .returning(URL)
+    )
+
+    result = await db.execute(stmt)
+    await db.commit()
+
+    url_data = result.scalar_one()
 
     return SuccessResponse(
             message="original url retrieved successfully",
@@ -85,3 +96,17 @@ async def delete_url(short_code: str, db: AsyncSession = Depends(get_session)):
     await db.commit()
 
     return SuccessResponse(message="URL deleted successfully", data=None)
+
+@router.get("/{short_code}/stats", response_model=SuccessResponse[StatResponseDTO], status_code=200)
+async def get_url_stats(short_code: str, db: AsyncSession = Depends(get_session)):
+    stmt = select(URL).where(URL.short_code == short_code)
+    result = await db.execute(stmt)
+    stat_data = result.scalar_one_or_none()
+
+    if not stat_data:
+        raise HTTPException(status_code=404, detail="Short URL not found")
+
+    return SuccessResponse(
+        message="url stats retrieved successfully",
+        data=StatResponseDTO.model_validate(stat_data)
+    )
