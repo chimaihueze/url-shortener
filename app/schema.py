@@ -3,6 +3,9 @@ from pydantic import BaseModel, ConfigDict, Field, AnyUrl
 from datetime import datetime
 
 
+T = TypeVar("T")
+
+
 class RequestDTO(BaseModel):
     url: AnyUrl
 
@@ -16,6 +19,7 @@ class ResponseDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class StatResponseDTO(BaseModel):
     id: str = Field(max_length=36)
     url: AnyUrl
@@ -26,11 +30,11 @@ class StatResponseDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-T = TypeVar("T")
 
 class SuccessResponse(BaseModel, Generic[T]):
     message: str
     data: T
+
 
 class SuccessMessage(BaseModel):
     message: str
