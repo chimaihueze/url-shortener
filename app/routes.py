@@ -1,12 +1,11 @@
-from datetime import datetime
 import random
 import string
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, delete
+from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import select, update
 
 from app.core.db.session import get_session
 from app.model import URL
-from app.schema import RequestDTO, ResponseDTO, SuccessResponse
+from app.schema import RequestDTO, ResponseDTO, SuccessResponse, StatResponseDTO
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="")
@@ -15,8 +14,7 @@ router = APIRouter(prefix="")
 async def shorten(data: RequestDTO, db: AsyncSession = Depends(get_session)):
     
     short_code = "".join(random.choices(string.ascii_lowercase, k=7))
-    created_at = datetime.now()
-    record = URL(url=str(data.url), short_code=short_code, created_at=created_at)
+    record = URL(url=str(data.url), short_code=short_code)
 
     db.add(record)
     await db.commit()
@@ -82,7 +80,7 @@ async def update_original_url(short_code: str, data: RequestDTO, db: AsyncSessio
         data=ResponseDTO.model_validate(url_data)
     )
 
-@router.delete("/{short_code}", response_model=SuccessResponse, status_code=200)
+@router.delete("/{short_code}", status_code=204)
 async def delete_url(short_code: str, db: AsyncSession = Depends(get_session)):
     stmt = select(URL).where(URL.short_code == short_code)
     result = await db.execute(stmt)
@@ -91,11 +89,11 @@ async def delete_url(short_code: str, db: AsyncSession = Depends(get_session)):
     if not url_data:
         raise HTTPException(status_code=404, detail="Short URL not found")
 
-    delete_stmt = delete(URL).where(URL.short_code == short_code)
-    await db.execute(delete_stmt)
+    await db.delete(url_data)
     await db.commit()
 
-    return SuccessResponse(message="URL deleted successfully", data=None)
+    return Response(status_code=204)
+
 
 @router.get("/{short_code}/stats", response_model=SuccessResponse[StatResponseDTO], status_code=200)
 async def get_url_stats(short_code: str, db: AsyncSession = Depends(get_session)):
